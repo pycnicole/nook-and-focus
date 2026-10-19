@@ -90,6 +90,7 @@
   display: flex;
   align-items: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  cursor: pointer; /* 新增這行：讓滑鼠移到門板上時顯示手指游標 */
 }
 
 .door-left {

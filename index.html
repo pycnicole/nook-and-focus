@@ -165,9 +165,9 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <!-- 開關書櫃門按鈕 -->
-              <button type="button" id="btn-toggle-door" class="text-xs bg-nook-bg hover:bg-nook-border text-nook-muted hover:text-nook-text border border-nook-border px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer" title="專注時可關上書櫃門減少視覺干擾">
-                <span id="door-btn-text">🚪 關上書櫃門</span>
+              <!-- 開關書櫃門按鈕 (預設顯示打開) -->
+              <button type="button" id="btn-toggle-door" class="text-xs bg-nook-bg hover:bg-nook-border border border-nook-accent/50 text-nook-accent px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer" title="點擊切換書櫃門開關">
+                <span id="door-btn-text">🔓 打開書櫃門</span>
               </button>
               <!-- 放上一本書按鈕 -->
               <button type="button" id="btn-open-add-book" class="text-xs bg-nook-accent/15 hover:bg-nook-accent/25 text-nook-accent border border-nook-accent/30 px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
@@ -189,25 +189,17 @@
             <!-- 視覺化書櫃區 -->
             <div id="bookshelf-container" class="space-y-8"></div>
 
-            <!-- 書櫃雙開木門 (預設打開，點擊「關上書櫃門」時左右闔上) -->
-            <div id="cabinet-doors" class="cabinet-doors-wrapper">
+            <!-- 書櫃雙開木門 (加上 is-closed 讓初始畫面直接維持闔上) -->
+            <div id="cabinet-doors" class="cabinet-doors-wrapper is-closed" title="點擊門板即可打開書櫃">
               <!-- 左扇門 -->
               <div class="cabinet-door door-left">
                 <div class="door-panel"></div>
-                <div class="door-handle" title="點擊打開書櫃"></div>
+                <div class="door-handle"></div>
               </div>
               <!-- 右扇門 -->
               <div class="cabinet-door door-right">
                 <div class="door-panel"></div>
-                <div class="door-handle" title="點擊打開書櫃"></div>
-              </div>
-              <!-- 關門時的中央靜謐提示 -->
-              <div class="cabinet-closed-badge">
-                <p class="font-serif text-sm text-nook-text tracking-wider mb-1">書櫃門已輕輕闔上</p>
-                <p class="text-[11px] text-nook-muted mb-3">減少視覺干擾，安心沉浸於此刻的專注時光</p>
-                <button type="button" id="btn-open-door-center" class="text-xs bg-nook-accent/20 hover:bg-nook-accent/30 text-nook-accent border border-nook-accent/40 px-3.5 py-1.5 rounded-lg transition cursor-pointer">
-                  打開書櫃門
-                </button>
+                <div class="door-handle"></div>
               </div>
             </div>
           </div>
@@ -227,34 +219,45 @@
 
   </main>
 
-  <!-- ================= 底部：空間小簡介 (About Footer) ================= -->
+  <!-- ================= 底部：空間小簡介 (雙欄情境導覽) ================= -->
   <footer class="border-t border-nook-border bg-nook-card/40 mt-8">
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="max-w-xl">
-          <h3 class="font-serif text-sm font-semibold text-nook-accent flex items-center gap-2 mb-1.5">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span>關於 Nook & Focus — 為什麼打造這個深夜書房？</span>
-          </h3>
-          <p class="text-xs text-nook-muted leading-relaxed">
-            這是一個結合「專注力工具」與「閱讀紀錄」的私人數位角落。在需要深度投入時，你可以關上右側的書櫃門、調配喜歡的環境白噪音並啟動番茄鐘；在休息片刻時，則能拉開書櫃，翻閱或寫下每一本書帶給你的啟發與筆記。
+      <!-- 空間核心引言 -->
+      <div class="mb-6">
+        <h3 class="font-serif text-sm font-semibold text-nook-accent flex items-center gap-2 mb-1.5">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>關於 Nook & Focus — 夜晚專屬的靜謐一隅</span>
+        </h3>
+        <p class="text-xs text-nook-muted leading-relaxed">
+          夜晚的時間總是特別珍貴，有時需要沉下心把待辦的事情做完，有時則只想翻幾頁書、讓思緒慢下來。這裡將兩種日常溫柔地收進同一個畫面裡——在忙碌與閱讀之間，留給自己一方不被打擾的數位書房。
+        </p>
+      </div>
+
+      <!-- 左右雙欄介紹 (呼應上方主區塊) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 text-xs">
+        
+        <!-- 左側介紹 (對應上方 7 欄：專注與待辦) -->
+        <div class="lg:col-span-7 bg-nook-card/80 border border-nook-border rounded-xl p-5 flex flex-col justify-center">
+          <p class="font-serif font-medium text-nook-text text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-nook-accent">🕯️</span>
+            <span>左側｜專注讀書台與日常待辦</span>
+          </p>
+          <p class="text-nook-muted leading-relaxed">
+            當夜晚需要處理正事、寫作業或推進目標時，可以在這裡列下今日的待辦事項，挑一首喜歡的環境白噪音（微雨、柴火或咖啡館），並啟動番茄鐘。在倒數的節奏裡，安靜且踏實地把眼前的事一件件完成。
           </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto text-xs">
-          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
-            <p class="font-serif font-medium text-nook-text mb-0.5">⏱️ 沉浸專注台</p>
-            <p class="text-[11px] text-nook-muted">番茄鐘結合多軌環境音自由混音</p>
-          </div>
-          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
-            <p class="font-serif font-medium text-nook-text mb-0.5">🚪 防干擾書櫃門</p>
-            <p class="text-[11px] text-nook-muted">專注時可闔上櫃門，休息時展開</p>
-          </div>
-          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
-            <p class="font-serif font-medium text-nook-text mb-0.5">🔒 隱私本地儲存</p>
-            <p class="text-[11px] text-nook-muted">資料保存在瀏覽器，免登入不外流</p>
-          </div>
+        <!-- 右側介紹 (對應上方 5 欄：私人書櫃) -->
+        <div class="lg:col-span-5 bg-nook-card/80 border border-nook-border rounded-xl p-5 flex flex-col justify-center">
+          <p class="font-serif font-medium text-nook-text text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-nook-accent">🚪</span>
+            <span>右側｜可闔上的私人慢活書架</span>
+          </p>
+          <p class="text-nook-muted leading-relaxed">
+            需要專心做事時，書櫃門會預設輕輕闔上，替你收起多餘的視覺干擾；當忙完一段落、或是某個瞬間突然想翻翻書時，只需輕點木門將它推開，就能隨時瀏覽想看的書單，或為近期讀完的作品寫下片刻隨筆。
+          </p>
         </div>
+
       </div>
     </div>
   </footer>

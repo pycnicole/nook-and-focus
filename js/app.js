@@ -38,14 +38,15 @@ var STORAGE_KEYS = {
   TODOS: 'nook_todos_empty_v1',
   BOOKS: 'nook_books_empty_v1',
   FOCUS_MINUTES: 'nook_focus_empty_v1',
-  DOOR_CLOSED: 'nook_door_closed_v1'
+  DOOR_CLOSED: 'nook_door_closed_v2' // 更新鑰匙名稱，確保預設關門立即生效
 };
 
 var state = {
   todos: loadFromStorage(STORAGE_KEYS.TODOS, typeof DEFAULT_TODOS !== 'undefined' ? DEFAULT_TODOS : []),
   books: loadFromStorage(STORAGE_KEYS.BOOKS, typeof DEFAULT_BOOKS !== 'undefined' ? DEFAULT_BOOKS : []),
   focusMinutes: parseInt(localStorage.getItem(STORAGE_KEYS.FOCUS_MINUTES), 10) || 0,
-  isDoorClosed: localStorage.getItem(STORAGE_KEYS.DOOR_CLOSED) === 'true',
+  // 預設為 true（關門狀態）；只有當 localStorage 明確記錄為 'false' 時才打開
+  isDoorClosed: localStorage.getItem(STORAGE_KEYS.DOOR_CLOSED) !== 'false',
   sounds: typeof DEFAULT_SOUNDS !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_SOUNDS)) : [],
   currentFilter: 'all',
   activeBookId: null,
@@ -523,10 +524,19 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function bindEvents() {
-  var toggleBtn = document.getElementById('btn-timer-toggle');
-  var resetBtn = document.getElementById('btn-timer-reset');
-  if (toggleBtn) toggleBtn.addEventListener('click', toggleTimer);
-  if (resetBtn) resetBtn.addEventListener('click', resetTimer);
+  var toggleDoorBtn = document.getElementById('btn-toggle-door');
+  var cabinetDoors = document.getElementById('cabinet-doors');
+
+  if (toggleDoorBtn) {
+    toggleDoorBtn.addEventListener('click', toggleCabinetDoor);
+  }
+  if (cabinetDoors) {
+    cabinetDoors.addEventListener('click', function () {
+      if (state.isDoorClosed) {
+        toggleCabinetDoor();
+      }
+    });
+  }
 
   var timerTabs = document.querySelectorAll('.timer-tab');
   timerTabs.forEach(function (tab, index) {
