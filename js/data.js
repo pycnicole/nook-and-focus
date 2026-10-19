@@ -1,4 +1,4 @@
-// 預設環境白噪音設定 (內建免版權真實環境音網址，亦可改為本地端 './assets/audio/xxx.mp3')
+// 預設環境白噪音設定 (直接讀取你專案內的 ./assets/audio/*.mp3)
 var DEFAULT_SOUNDS = [
   { 
     id: 'rain', 
@@ -26,7 +26,7 @@ var DEFAULT_SOUNDS = [
   },
   { 
     id: 'pages', 
-    name: '翻書聲', 
+    name: '翻書與書寫', 
     icon: 'book-open', 
     volume: 45, 
     active: false,
@@ -34,8 +34,8 @@ var DEFAULT_SOUNDS = [
   }
 ];
 
-// 預設今日待辦事項
+// 預設今日待辦事項（預設為空，由使用者自行新增）
 var DEFAULT_TODOS = [];
 
-// 預設個人書架館藏
+// 預設個人書架館藏（預設為空，由使用者自行新增）
 var DEFAULT_BOOKS = [];

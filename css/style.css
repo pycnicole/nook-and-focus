@@ -1,4 +1,4 @@
-/* ================= 1. 概念書背與木質書架設計 (零版權爭議) ================= */
+/* ================= 1. 概念書背與木質書架設計 ================= */
 .bookshelf-row {
   position: relative;
   display: flex;
@@ -8,14 +8,12 @@
   min-height: 175px;
   background: linear-gradient(to bottom, rgba(22, 20, 18, 0.2) 0%, rgba(0, 0, 0, 0.45) 100%);
   border-radius: 12px 12px 0 0;
-  /* 底部的木頭層板 */
   border-bottom: 14px solid #362A22;
   box-shadow: 
     inset 0 -8px 16px rgba(0, 0, 0, 0.5),
     0 6px 10px -2px rgba(0, 0, 0, 0.6);
 }
 
-/* 單本立體書背 */
 .book-spine {
   position: relative;
   cursor: pointer;
@@ -26,7 +24,6 @@
   align-items: center;
   justify-content: space-between;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-  /* 利用內陰影做出書背的圓弧立體感與折線 */
   box-shadow: 
     inset 3px 0 5px rgba(255, 255, 255, 0.18),
     inset -3px 0 6px rgba(0, 0, 0, 0.45),
@@ -34,7 +31,6 @@
   user-select: none;
 }
 
-/* 滑鼠移上去時「向上抽出」一本書的微互動 */
 .book-spine:hover {
   transform: translateY(-12px) scale(1.03);
   z-index: 10;
@@ -44,23 +40,22 @@
     0 14px 20px rgba(0, 0, 0, 0.65);
 }
 
-/* 書背上的直排中文書名 */
+/* 書背上的直排中文書名 (強制單行不折行) */
 .book-spine-title {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  letter-spacing: 0.08em;       
+  letter-spacing: 0.08em;
   font-family: 'Noto Serif TC', serif;
   font-weight: 600;
-  font-size: 0.78rem;           
+  font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  max-height: 130px;            
-  white-space: nowrap;          
+  max-height: 128px;
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;      
+  text-overflow: ellipsis;
 }
 
-/* 書背頂部與底部的裝飾燙金細線 */
 .book-spine::before,
 .book-spine::after {
   content: '';
@@ -70,7 +65,117 @@
   border-radius: 1px;
 }
 
-/* ================= 2. 音量滑桿 (Range Input) 美化 ================= */
+/* ================= 2. 書櫃雙開木門動畫設計 (防干擾模式) ================= */
+.cabinet-doors-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.cabinet-doors-wrapper.is-closed {
+  pointer-events: auto;
+}
+
+.cabinet-door {
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(180deg, #2B221C 0%, #1F1814 100%);
+  border: 2px solid #3D3027;
+  position: relative;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+}
+
+.door-left {
+  transform: translateX(-102%);
+  border-right: 1px solid #140F0C;
+}
+
+.door-right {
+  transform: translateX(102%);
+  border-left: 1px solid #3D3027;
+}
+
+.cabinet-doors-wrapper.is-closed .door-left,
+.cabinet-doors-wrapper.is-closed .door-right {
+  transform: translateX(0);
+}
+
+/* 木門內框與百葉窗隱約紋理 */
+.door-panel {
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(212, 163, 115, 0.16);
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 10px,
+    rgba(0, 0, 0, 0.18) 10px,
+    rgba(0, 0, 0, 0.18) 20px
+  );
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* 古銅金門把 */
+.door-handle {
+  width: 7px;
+  height: 44px;
+  background: linear-gradient(to bottom, #E6B98A, #B07D4F);
+  border-radius: 999px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  z-index: 5;
+  transition: filter 0.2s ease;
+}
+
+.door-handle:hover {
+  filter: brightness(1.15);
+}
+
+.door-left .door-handle {
+  right: 12px;
+}
+
+.door-right .door-handle {
+  left: 12px;
+}
+
+/* 關門時的中央靜謐提示卡片 */
+.cabinet-closed-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  background: rgba(22, 20, 18, 0.92);
+  border: 1px solid rgba(212, 163, 115, 0.35);
+  padding: 18px 24px;
+  border-radius: 16px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.35s ease 0.25s, transform 0.35s ease 0.25s;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.75);
+  z-index: 10;
+  width: 82%;
+  max-width: 280px;
+}
+
+.cabinet-doors-wrapper.is-closed .cabinet-closed-badge {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ================= 3. 音量滑桿與卷軸美化 ================= */
 input[type="range"].volume-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -96,7 +201,6 @@ input[type="range"].volume-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
 
-/* ================= 3. 自訂卷軸與彈窗動畫 ================= */
 ::-webkit-scrollbar {
   width: 5px;
 }

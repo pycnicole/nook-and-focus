@@ -2,15 +2,14 @@
 function loadFromStorage(key, fallback) {
   try {
     var raw = localStorage.getItem(key);
-    if (!raw) return fallback;
+    if (raw === null) return fallback;
     var parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback;
+    return Array.isArray(parsed) ? parsed : fallback;
   } catch (e) {
     return fallback;
   }
 }
 
-// 定義三種模式對應的文字，解決切換時文字沒變的問題！
 var MODE_TEXT = {
   focus: {
     readyStatus: '準備開始專注',
@@ -38,16 +37,19 @@ var MODE_TEXT = {
 var STORAGE_KEYS = {
   TODOS: 'nook_todos_empty_v1',
   BOOKS: 'nook_books_empty_v1',
-  FOCUS_MINUTES: 'nook_focus_empty_v1'
+  FOCUS_MINUTES: 'nook_focus_empty_v1',
+  DOOR_CLOSED: 'nook_door_closed_v1'
 };
 
 var state = {
   todos: loadFromStorage(STORAGE_KEYS.TODOS, typeof DEFAULT_TODOS !== 'undefined' ? DEFAULT_TODOS : []),
   books: loadFromStorage(STORAGE_KEYS.BOOKS, typeof DEFAULT_BOOKS !== 'undefined' ? DEFAULT_BOOKS : []),
   focusMinutes: parseInt(localStorage.getItem(STORAGE_KEYS.FOCUS_MINUTES), 10) || 0,
+  isDoorClosed: localStorage.getItem(STORAGE_KEYS.DOOR_CLOSED) === 'true',
   sounds: typeof DEFAULT_SOUNDS !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_SOUNDS)) : [],
   currentFilter: 'all',
   activeBookId: null,
+  editingBookId: null, // 用來記錄目前正在「編輯」哪一本書（若為 null 代表新增書籍）
   timer: {
     mode: 'focus',
     totalSeconds: 25 * 60,
@@ -62,6 +64,7 @@ function saveState() {
     localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify(state.todos));
     localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(state.books));
     localStorage.setItem(STORAGE_KEYS.FOCUS_MINUTES, String(state.focusMinutes));
+    localStorage.setItem(STORAGE_KEYS.DOOR_CLOSED, String(state.isDoorClosed));
   } catch (e) {}
 }
 
@@ -71,18 +74,14 @@ function refreshIcons() {
   }
 }
 
-// ================= 2. 真實環境音訊播放引擎 (HTML5 Audio + Web Audio 鐘聲) =================
+// ================= 2. 真實環境音訊播放引擎 =================
 var audioPlayers = {};
 var audioCtx = null;
 
-/**
- * 播放或控制真實環境音檔 (支援無縫循環播放)
- */
 function toggleAmbientSound(soundId, shouldPlay, volumePercent) {
   var soundConfig = state.sounds.find(function (s) { return s.id === soundId; });
   if (!soundConfig) return;
 
-  // 如果還沒建立過這個音軌的 Audio 物件，就建立一個
   if (!audioPlayers[soundId] && soundConfig.url) {
     var audio = new Audio(soundConfig.url);
     audio.loop = true;
@@ -93,13 +92,12 @@ function toggleAmbientSound(soundId, shouldPlay, volumePercent) {
   var player = audioPlayers[soundId];
   if (!player) return;
 
-  // 設定音量 (0.0 ~ 1.0)
   player.volume = Math.max(0, Math.min(1, volumePercent / 100));
 
   if (shouldPlay && volumePercent > 0) {
     if (player.paused) {
       player.play().catch(function (err) {
-        console.warn('音訊播放失敗，請確認網路連線或音訊檔案路徑:', err);
+        console.warn('音訊播放失敗，請確認檔案路徑:', err);
       });
     }
   } else {
@@ -109,9 +107,6 @@ function toggleAmbientSound(soundId, shouldPlay, volumePercent) {
   }
 }
 
-/**
- * 番茄鐘倒數結束時的 528Hz 頌缽提示鐘聲
- */
 function playChimeSound() {
   try {
     var AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -169,13 +164,11 @@ function toggleTimer() {
   var modeCfg = getCurrentModeConfig();
 
   if (state.timer.isRunning) {
-    // 暫停計時
     clearInterval(state.timer.intervalId);
     state.timer.isRunning = false;
     statusEl.textContent = '已暫停（點擊繼續）';
     btn.innerHTML = '<span>▶ 繼續計時</span>';
   } else {
-    // 開始計時
     state.timer.isRunning = true;
     statusEl.textContent = modeCfg.runningStatus;
     btn.innerHTML = '<span>⏸ 暫停</span>';
@@ -185,7 +178,6 @@ function toggleTimer() {
         state.timer.remainingSeconds--;
         updateTimerUI();
       } else {
-        // 倒數結束
         clearInterval(state.timer.intervalId);
         state.timer.isRunning = false;
         playChimeSound();
@@ -236,7 +228,7 @@ function renderSoundMixer() {
     rain: '🌧️',
     fire: '🔥',
     cafe: '☕',
-    pages: '🍃'
+    pages: '📖'
   };
 
   var html = '';
@@ -246,7 +238,7 @@ function renderSoundMixer() {
       ? 'bg-nook-accent/20 border-nook-accent text-nook-accent shadow-sm'
       : 'bg-nook-bg border-nook-border text-nook-muted hover:text-nook-text';
     var nameClass = sound.active ? 'text-nook-text font-medium' : 'text-nook-muted';
-    var volText = sound.active ? (sound.volume + '%') : '點擊圖示開啟';
+    var volText = sound.active ? (sound.volume + '%') : '點擊開啟';
     var emoji = iconMap[sound.id] || '🎵';
 
     html += '<div class="flex items-center gap-3.5">' +
@@ -350,7 +342,36 @@ function renderTodos() {
   });
 }
 
-// ================= 6. 個人數位書架渲染與 CRUD =================
+// ================= 6. 個人數位書架與書櫃門控制 =================
+function updateCabinetDoorUI() {
+  var doorsWrapper = document.getElementById('cabinet-doors');
+  var doorBtnText = document.getElementById('door-btn-text');
+  var doorBtn = document.getElementById('btn-toggle-door');
+  if (!doorsWrapper) return;
+
+  if (state.isDoorClosed) {
+    doorsWrapper.classList.add('is-closed');
+    if (doorBtnText) doorBtnText.textContent = '🔓 打開書櫃門';
+    if (doorBtn) {
+      doorBtn.classList.add('border-nook-accent/50', 'text-nook-accent');
+      doorBtn.classList.remove('text-nook-muted');
+    }
+  } else {
+    doorsWrapper.classList.remove('is-closed');
+    if (doorBtnText) doorBtnText.textContent = '🚪 關上書櫃門';
+    if (doorBtn) {
+      doorBtn.classList.remove('border-nook-accent/50', 'text-nook-accent');
+      doorBtn.classList.add('text-nook-muted');
+    }
+  }
+}
+
+function toggleCabinetDoor() {
+  state.isDoorClosed = !state.isDoorClosed;
+  saveState();
+  updateCabinetDoorUI();
+}
+
 function renderBookshelf() {
   var container = document.getElementById('bookshelf-container');
   if (!container) return;
@@ -363,7 +384,7 @@ function renderBookshelf() {
   if (summaryEl) {
     summaryEl.textContent = '目前顯示 ' + filteredBooks.length + ' 本書（總館藏 ' + state.books.length + ' 本）';
   }
-  
+
   var booksPerRow = 7;
   var shelves = [];
   for (var i = 0; i < filteredBooks.length; i += booksPerRow) {
@@ -384,7 +405,7 @@ function renderBookshelf() {
         var w = book.width || '38px';
         html += '<div class="book-spine" data-book-id="' + book.id + '" ' +
           'style="background-color: ' + book.color + '; height: ' + h + '; width: ' + w + ';" ' +
-          'title="點擊查看《' + book.title + '》筆記">' +
+          'title="點擊查看或編輯《' + book.title + '》">' +
           '<span class="book-spine-title">' + book.title + '</span>' +
         '</div>';
       }
@@ -426,6 +447,60 @@ function openBookModal(book) {
   }
 }
 
+/**
+ * 設定選色器的選中狀態
+ */
+function selectColorSwatch(colorCode) {
+  var swatches = document.querySelectorAll('.color-swatch');
+  swatches.forEach(function (s) {
+    if (s.getAttribute('data-color') === colorCode) {
+      s.classList.add('ring-2', 'ring-offset-2', 'ring-offset-nook-card', 'ring-nook-accent');
+      s.classList.remove('opacity-70');
+    } else {
+      s.classList.remove('ring-2', 'ring-offset-2', 'ring-offset-nook-card', 'ring-nook-accent');
+      s.classList.add('opacity-70');
+    }
+  });
+  var colorInput = document.getElementById('input-book-color');
+  if (colorInput) colorInput.value = colorCode;
+}
+
+/**
+ * 打開「新增」或「編輯」書籍的表單視窗
+ */
+function openBookFormModal(bookToEdit) {
+  var addModal = document.getElementById('add-book-modal');
+  var formTitle = document.getElementById('book-form-title');
+  var submitBtn = document.getElementById('btn-submit-book');
+
+  if (bookToEdit) {
+    // 編輯模式：帶入原本的資料
+    state.editingBookId = bookToEdit.id;
+    if (formTitle) formTitle.innerHTML = '<span>✏️ 編輯書籍資訊</span>';
+    if (submitBtn) submitBtn.textContent = '儲存修改';
+
+    document.getElementById('input-book-title').value = bookToEdit.title;
+    document.getElementById('input-book-author').value = bookToEdit.author;
+    document.getElementById('input-book-status').value = bookToEdit.status;
+    document.getElementById('input-book-note').value = bookToEdit.note === '尚未寫下閱讀筆記。' ? '' : (bookToEdit.note || '');
+    selectColorSwatch(bookToEdit.color || '#2C4A52');
+  } else {
+    // 新增模式：清空表單
+    state.editingBookId = null;
+    if (formTitle) formTitle.innerHTML = '<span>＋ 放上一本新書</span>';
+    if (submitBtn) submitBtn.textContent = '上架到書櫃';
+
+    var form = document.getElementById('add-book-form');
+    if (form) form.reset();
+    selectColorSwatch('#2C4A52');
+  }
+
+  if (addModal) {
+    addModal.classList.remove('hidden');
+    addModal.classList.add('flex');
+  }
+}
+
 // ================= 7. 初始化與事件綁定 =================
 document.addEventListener('DOMContentLoaded', function () {
   var dateEl = document.getElementById('current-date');
@@ -438,10 +513,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   updateFocusStatsUI();
-  resetTimer(); // 初始化番茄鐘文字
+  resetTimer();
   renderSoundMixer();
   renderTodos();
   renderBookshelf();
+  updateCabinetDoorUI();
   bindEvents();
   refreshIcons();
 });
@@ -452,7 +528,6 @@ function bindEvents() {
   if (toggleBtn) toggleBtn.addEventListener('click', toggleTimer);
   if (resetBtn) resetBtn.addEventListener('click', resetTimer);
 
-  // 切換 專注 / 短休 / 長休 Tabs
   var timerTabs = document.querySelectorAll('.timer-tab');
   timerTabs.forEach(function (tab, index) {
     tab.addEventListener('click', function () {
@@ -463,7 +538,6 @@ function bindEvents() {
       tab.classList.add('active', 'bg-nook-card', 'text-nook-accent', 'font-medium', 'shadow-sm');
       tab.classList.remove('text-nook-muted');
 
-      // 就算 HTML 沒有寫 data-mode，也會自動根據按鈕順序 (0: focus, 1: short, 2: long) 判斷！
       var fallbackModes = ['focus', 'short', 'long'];
       var fallbackMins = [25, 5, 15];
       var mode = tab.getAttribute('data-mode') || fallbackModes[index] || 'focus';
@@ -471,7 +545,7 @@ function bindEvents() {
 
       state.timer.mode = mode;
       state.timer.totalSeconds = mins * 60;
-      resetTimer(); // 這會自動把下方文字與按鈕更新成對應的「開始短休 / 開始長休」！
+      resetTimer();
     });
   });
 
@@ -505,6 +579,15 @@ function bindEvents() {
     });
   }
 
+  // 書櫃門開關事件 (包含上方按鈕、門上古銅把手、中央開啟按鈕)
+  var toggleDoorBtn = document.getElementById('btn-toggle-door');
+  var openDoorCenterBtn = document.getElementById('btn-open-door-center');
+  if (toggleDoorBtn) toggleDoorBtn.addEventListener('click', toggleCabinetDoor);
+  if (openDoorCenterBtn) openDoorCenterBtn.addEventListener('click', toggleCabinetDoor);
+  document.querySelectorAll('.door-handle').forEach(function (handle) {
+    handle.addEventListener('click', toggleCabinetDoor);
+  });
+
   var shelfTabs = document.querySelectorAll('.shelf-tab');
   shelfTabs.forEach(function (tab) {
     tab.addEventListener('click', function () {
@@ -520,6 +603,7 @@ function bindEvents() {
     });
   });
 
+  // 書籍詳情 Modal 關閉、刪除與「切換至編輯模式」
   var bookModal = document.getElementById('book-modal');
   var closeBookModal = function () {
     if (!bookModal) return;
@@ -541,6 +625,19 @@ function bindEvents() {
     });
   }
 
+  // 點擊「編輯書籍資訊 / 狀態」按鈕
+  var editBookBtn = document.getElementById('btn-edit-book');
+  if (editBookBtn) {
+    editBookBtn.addEventListener('click', function () {
+      if (!state.activeBookId) return;
+      var targetBook = state.books.find(function (b) { return b.id === state.activeBookId; });
+      if (!targetBook) return;
+      closeBookModal();
+      openBookFormModal(targetBook);
+    });
+  }
+
+  // 新增書籍按鈕與視窗關閉
   var addModal = document.getElementById('add-book-modal');
   var openAddBtn = document.getElementById('btn-open-add-book') || document.getElementById('btn-add-book');
   var closeAddBtn = document.getElementById('btn-close-add-modal');
@@ -549,12 +646,18 @@ function bindEvents() {
     if (!addModal) return;
     addModal.classList.add('hidden');
     addModal.classList.remove('flex');
+    state.editingBookId = null;
   };
 
-  if (openAddBtn && addModal) {
+  if (openAddBtn) {
     openAddBtn.addEventListener('click', function () {
-      addModal.classList.remove('hidden');
-      addModal.classList.add('flex');
+      // 如果書櫃門關著，點「放上一本書」時自動貼心幫使用者把門打開
+      if (state.isDoorClosed) {
+        state.isDoorClosed = false;
+        saveState();
+        updateCabinetDoorUI();
+      }
+      openBookFormModal(null);
     });
   }
   if (closeAddBtn) closeAddBtn.addEventListener('click', closeAddModal);
@@ -563,17 +666,11 @@ function bindEvents() {
   var swatches = document.querySelectorAll('.color-swatch');
   swatches.forEach(function (swatch) {
     swatch.addEventListener('click', function () {
-      swatches.forEach(function (s) {
-        s.classList.remove('ring-2', 'ring-offset-2', 'ring-offset-nook-card', 'ring-nook-accent');
-        s.classList.add('opacity-70');
-      });
-      swatch.classList.add('ring-2', 'ring-offset-2', 'ring-offset-nook-card', 'ring-nook-accent');
-      swatch.classList.remove('opacity-70');
-      var colorInput = document.getElementById('input-book-color');
-      if (colorInput) colorInput.value = swatch.getAttribute('data-color');
+      selectColorSwatch(swatch.getAttribute('data-color'));
     });
   });
 
+  // 提交「新增」或「編輯修改」書籍表單
   var addBookForm = document.getElementById('add-book-form');
   if (addBookForm) {
     addBookForm.addEventListener('submit', function (e) {
@@ -586,19 +683,32 @@ function bindEvents() {
 
       if (!title || !author) return;
 
-      var randomHeight = (Math.floor(Math.random() * 20) + 136) + 'px';
-      var randomWidth = (Math.floor(Math.random() * 8) + 35) + 'px';
+      if (state.editingBookId) {
+        // 【編輯模式】更新現有書籍資料（保留原本的書背高寬）
+        var targetBook = state.books.find(function (b) { return b.id === state.editingBookId; });
+        if (targetBook) {
+          targetBook.title = title;
+          targetBook.author = author;
+          targetBook.status = status;
+          targetBook.color = color;
+          targetBook.note = note || '尚未寫下閱讀筆記。';
+        }
+      } else {
+        // 【新增模式】推進一本新書
+        var randomHeight = (Math.floor(Math.random() * 20) + 136) + 'px';
+        var randomWidth = (Math.floor(Math.random() * 8) + 35) + 'px';
 
-      state.books.push({
-        id: 'b_' + Date.now(),
-        title: title,
-        author: author,
-        status: status,
-        color: color,
-        height: randomHeight,
-        width: randomWidth,
-        note: note || '尚未寫下閱讀筆記。'
-      });
+        state.books.push({
+          id: 'b_' + Date.now(),
+          title: title,
+          author: author,
+          status: status,
+          color: color,
+          height: randomHeight,
+          width: randomWidth,
+          note: note || '尚未寫下閱讀筆記。'
+        });
+      }
 
       saveState();
       renderBookshelf();

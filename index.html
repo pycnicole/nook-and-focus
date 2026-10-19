@@ -62,7 +62,7 @@
       <div class="flex items-center gap-6 text-sm">
         <div class="hidden md:flex items-center gap-2 text-nook-muted">
           <i data-lucide="calendar" class="w-4 h-4"></i>
-          <span id="current-date">2026.10.15</span>
+          <span id="current-date">2026.10.19</span>
         </div>
         <div class="flex items-center gap-2 bg-nook-card px-3.5 py-1.5 rounded-full border border-nook-border">
           <i data-lucide="flame" class="w-4 h-4 text-nook-accent"></i>
@@ -84,14 +84,12 @@
         
         <!-- 卡片 1：番茄鐘計時器 -->
         <div class="bg-nook-card border border-nook-border rounded-2xl p-6 flex flex-col items-center justify-between relative overflow-hidden">
-          <!-- 模式切換 Tabs -->
           <div class="flex gap-1 bg-nook-bg p-1 rounded-xl border border-nook-border w-full justify-between text-xs mb-4">
             <button type="button" data-mode="focus" data-minutes="25" class="timer-tab active flex-1 py-1.5 rounded-lg font-medium bg-nook-card text-nook-accent shadow-sm transition cursor-pointer">專注 25m</button>
             <button type="button" data-mode="short" data-minutes="5" class="timer-tab flex-1 py-1.5 rounded-lg text-nook-muted hover:text-nook-text transition cursor-pointer">短休 5m</button>
             <button type="button" data-mode="long" data-minutes="15" class="timer-tab flex-1 py-1.5 rounded-lg text-nook-muted hover:text-nook-text transition cursor-pointer">長休 15m</button>
           </div>
 
-          <!-- 圓形進度條與倒數數字 -->
           <div class="relative w-44 h-44 flex items-center justify-center my-2">
             <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="4" fill="transparent" class="text-nook-border" />
@@ -105,11 +103,9 @@
             </div>
           </div>
 
-          <!-- 控制按鈕 -->
           <div class="flex items-center gap-3 w-full mt-4">
             <button type="button" id="btn-timer-toggle" class="flex-1 bg-nook-accent hover:bg-nook-accent/90 text-nook-bg font-medium py-2.5 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-nook-accent/10 cursor-pointer">
-              <i data-lucide="play" class="w-4 h-4 fill-current"></i>
-              <span>開始專注</span>
+              <span>▶ 開始專注</span>
             </button>
             <button type="button" id="btn-timer-reset" class="p-2.5 rounded-xl bg-nook-bg border border-nook-border text-nook-muted hover:text-nook-text transition cursor-pointer" title="重置計時器">
               <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -127,7 +123,6 @@
             <button type="button" id="btn-mute-all" class="text-xs text-nook-muted hover:text-nook-accent transition cursor-pointer">全部靜音</button>
           </div>
 
-          <!-- 音軌列表 -->
           <div id="sound-mixer-list" class="flex flex-col gap-4 my-auto"></div>
         </div>
 
@@ -144,7 +139,7 @@
         </div>
 
         <form id="todo-form" class="flex gap-2 mb-4">
-          <input type="text" id="todo-input" placeholder="寫下今天要完成的事項 ..."
+          <input type="text" id="todo-input" placeholder="寫下今天要完成的進度..."
             class="flex-1 bg-nook-bg border border-nook-border rounded-xl px-4 py-2.5 text-sm text-nook-text placeholder-nook-muted focus:outline-none focus:border-nook-accent transition">
           <button type="submit" class="bg-nook-bg hover:bg-nook-border border border-nook-border text-nook-accent px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition cursor-pointer">
             <i data-lucide="plus" class="w-4 h-4"></i>
@@ -159,18 +154,26 @@
 
     <!-- 【右側 5 欄】副核心：個人數位書架 (Personal Bookshelf) -->
     <section class="lg:col-span-5 flex flex-col">
-      <div class="bg-nook-card border border-nook-border rounded-2xl p-6 flex-1 flex flex-col justify-between">
+      <div class="bg-nook-card border border-nook-border rounded-2xl p-6 flex-1 flex flex-col justify-between relative overflow-hidden">
         
         <div>
-          <div class="flex items-center justify-between mb-4">
+          <!-- 書架標題與「開關櫃門 / 新增書籍」按鈕 -->
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div class="flex items-center gap-2">
               <i data-lucide="library" class="w-5 h-5 text-nook-accent"></i>
               <h2 class="font-serif font-semibold text-lg">私人慢活書架</h2>
             </div>
-            <button type="button" id="btn-open-add-book" class="text-xs bg-nook-accent/15 hover:bg-nook-accent/25 text-nook-accent border border-nook-accent/30 px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span>放上一本書</span>
-            </button>
+
+            <div class="flex items-center gap-2">
+              <!-- 開關書櫃門按鈕 -->
+              <button type="button" id="btn-toggle-door" class="text-xs bg-nook-bg hover:bg-nook-border text-nook-muted hover:text-nook-text border border-nook-border px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer" title="專注時可關上書櫃門減少視覺干擾">
+                <span id="door-btn-text">🚪 關上書櫃門</span>
+              </button>
+              <!-- 放上一本書按鈕 -->
+              <button type="button" id="btn-open-add-book" class="text-xs bg-nook-accent/15 hover:bg-nook-accent/25 text-nook-accent border border-nook-accent/30 px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
+                <span>＋ 放上一本書</span>
+              </button>
+            </div>
           </div>
 
           <!-- 狀態篩選 Tabs -->
@@ -181,16 +184,41 @@
             <button type="button" data-filter="wishlist" class="shelf-tab px-3 py-1 rounded-full text-nook-muted hover:text-nook-text transition cursor-pointer">想看清單</button>
           </div>
 
-          <!-- 視覺化書櫃區 -->
-          <div id="bookshelf-container" class="space-y-8 my-4"></div>
+          <!-- 書櫃主體外框 (包裹書架與雙開木門) -->
+          <div id="bookshelf-wrapper" class="relative rounded-xl overflow-hidden my-2">
+            <!-- 視覺化書櫃區 -->
+            <div id="bookshelf-container" class="space-y-8"></div>
+
+            <!-- 書櫃雙開木門 (預設打開，點擊「關上書櫃門」時左右闔上) -->
+            <div id="cabinet-doors" class="cabinet-doors-wrapper">
+              <!-- 左扇門 -->
+              <div class="cabinet-door door-left">
+                <div class="door-panel"></div>
+                <div class="door-handle" title="點擊打開書櫃"></div>
+              </div>
+              <!-- 右扇門 -->
+              <div class="cabinet-door door-right">
+                <div class="door-panel"></div>
+                <div class="door-handle" title="點擊打開書櫃"></div>
+              </div>
+              <!-- 關門時的中央靜謐提示 -->
+              <div class="cabinet-closed-badge">
+                <p class="font-serif text-sm text-nook-text tracking-wider mb-1">書櫃門已輕輕闔上</p>
+                <p class="text-[11px] text-nook-muted mb-3">減少視覺干擾，安心沉浸於此刻的專注時光</p>
+                <button type="button" id="btn-open-door-center" class="text-xs bg-nook-accent/20 hover:bg-nook-accent/30 text-nook-accent border border-nook-accent/40 px-3.5 py-1.5 rounded-lg transition cursor-pointer">
+                  打開書櫃門
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 底部：書架館藏統計與操作提示 -->
         <div class="mt-6 pt-4 border-t border-nook-border flex items-center justify-between text-xs text-nook-muted">
-          <span id="shelf-summary">目前共有 6 本書在架上</span>
+          <span id="shelf-summary">目前共有 0 本書在架上</span>
           <span class="flex items-center gap-1">
             <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-nook-accent"></i>
-            點擊書背可檢視筆記
+            點擊書背可檢視或編輯
           </span>
         </div>
 
@@ -198,6 +226,38 @@
     </section>
 
   </main>
+
+  <!-- ================= 底部：空間小簡介 (About Footer) ================= -->
+  <footer class="border-t border-nook-border bg-nook-card/40 mt-8">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="max-w-xl">
+          <h3 class="font-serif text-sm font-semibold text-nook-accent flex items-center gap-2 mb-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>關於 Nook & Focus — 為什麼打造這個深夜書房？</span>
+          </h3>
+          <p class="text-xs text-nook-muted leading-relaxed">
+            這是一個結合「專注力工具」與「閱讀紀錄」的私人數位角落。在需要深度投入時，你可以關上右側的書櫃門、調配喜歡的環境白噪音並啟動番茄鐘；在休息片刻時，則能拉開書櫃，翻閱或寫下每一本書帶給你的啟發與筆記。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto text-xs">
+          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
+            <p class="font-serif font-medium text-nook-text mb-0.5">⏱️ 沉浸專注台</p>
+            <p class="text-[11px] text-nook-muted">番茄鐘結合多軌環境音自由混音</p>
+          </div>
+          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
+            <p class="font-serif font-medium text-nook-text mb-0.5">🚪 防干擾書櫃門</p>
+            <p class="text-[11px] text-nook-muted">專注時可闔上櫃門，休息時展開</p>
+          </div>
+          <div class="bg-nook-card border border-nook-border rounded-xl px-4 py-3">
+            <p class="font-serif font-medium text-nook-text mb-0.5">🔒 隱私本地儲存</p>
+            <p class="text-[11px] text-nook-muted">資料保存在瀏覽器，免登入不外流</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <!-- ================= 視窗 1：書籍詳情彈出視窗 (Book Detail Modal) ================= -->
   <div id="book-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -221,39 +281,42 @@
           <p id="modal-book-note" class="text-nook-text/90 leading-relaxed text-sm whitespace-pre-line"></p>
         </div>
 
-        <div class="flex justify-end pt-2">
+        <!-- 底部按鈕：左側編輯書籍、右側移除書籍 -->
+        <div class="flex items-center justify-between pt-2 border-t border-nook-border">
+          <button type="button" id="btn-edit-book" class="text-xs bg-nook-accent/15 hover:bg-nook-accent/25 text-nook-accent border border-nook-accent/30 px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+            <span>✏️ 編輯書籍資訊 / 狀態</span>
+          </button>
+
           <button type="button" id="btn-delete-book" class="text-xs text-nook-muted hover:text-red-400 flex items-center gap-1 transition cursor-pointer">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            <span>從書架移除這本書</span>
+            <span>🗑️ 移除書籍</span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ================= 視窗 2：新增書籍彈出視窗 (Add Book Modal) ================= -->
+  <!-- ================= 視窗 2：新增 / 編輯書籍彈出視窗 (Add / Edit Book Modal) ================= -->
   <div id="add-book-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-nook-card border border-nook-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-fade-in">
       <button type="button" id="btn-close-add-modal" class="absolute top-5 right-5 text-nook-muted hover:text-nook-text transition cursor-pointer">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
 
-      <h3 class="font-serif text-lg font-semibold mb-4 flex items-center gap-2">
-        <i data-lucide="book-plus" class="w-5 h-5 text-nook-accent"></i>
-        <span>放上一本新書</span>
+      <h3 id="book-form-title" class="font-serif text-lg font-semibold mb-4 flex items-center gap-2 text-nook-accent">
+        <span>＋ 放上一本新書</span>
       </h3>
 
       <form id="add-book-form" class="space-y-4 text-sm">
         <div>
           <label class="block text-xs text-nook-muted mb-1">書名 *</label>
-          <input type="text" id="input-book-title" required placeholder="例如：流俗地"
+          <input type="text" id="input-book-title" required placeholder="例如：流浪者之歌"
             class="w-full bg-nook-bg border border-nook-border rounded-xl px-3.5 py-2 text-nook-text focus:outline-none focus:border-nook-accent">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-nook-muted mb-1">作者 *</label>
-            <input type="text" id="input-book-author" required placeholder="例如：黎紫書"
+            <input type="text" id="input-book-author" required placeholder="例如：赫曼·赫塞"
               class="w-full bg-nook-bg border border-nook-border rounded-xl px-3.5 py-2 text-nook-text focus:outline-none focus:border-nook-accent">
           </div>
           <div>
@@ -285,7 +348,7 @@
             class="w-full bg-nook-bg border border-nook-border rounded-xl px-3.5 py-2 text-nook-text focus:outline-none focus:border-nook-accent"></textarea>
         </div>
 
-        <button type="submit" class="w-full bg-nook-accent hover:bg-nook-accent/90 text-nook-bg font-medium py-2.5 rounded-xl transition cursor-pointer">
+        <button type="submit" id="btn-submit-book" class="w-full bg-nook-accent hover:bg-nook-accent/90 text-nook-bg font-medium py-2.5 rounded-xl transition cursor-pointer">
           上架到書櫃
         </button>
       </form>
