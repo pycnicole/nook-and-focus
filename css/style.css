@@ -1,0 +1,118 @@
+/* ================= 1. 概念書背與木質書架設計 (零版權爭議) ================= */
+.bookshelf-row {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 16px 20px 0 20px;
+  min-height: 175px;
+  background: linear-gradient(to bottom, rgba(22, 20, 18, 0.2) 0%, rgba(0, 0, 0, 0.45) 100%);
+  border-radius: 12px 12px 0 0;
+  /* 底部的木頭層板 */
+  border-bottom: 14px solid #362A22;
+  box-shadow: 
+    inset 0 -8px 16px rgba(0, 0, 0, 0.5),
+    0 6px 10px -2px rgba(0, 0, 0, 0.6);
+}
+
+/* 單本立體書背 */
+.book-spine {
+  position: relative;
+  cursor: pointer;
+  border-radius: 4px 4px 2px 2px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  /* 利用內陰影做出書背的圓弧立體感與折線 */
+  box-shadow: 
+    inset 3px 0 5px rgba(255, 255, 255, 0.18),
+    inset -3px 0 6px rgba(0, 0, 0, 0.45),
+    3px 0 8px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+/* 滑鼠移上去時「向上抽出」一本書的微互動 */
+.book-spine:hover {
+  transform: translateY(-12px) scale(1.03);
+  z-index: 10;
+  box-shadow: 
+    inset 3px 0 6px rgba(255, 255, 255, 0.25),
+    inset -3px 0 6px rgba(0, 0, 0, 0.45),
+    0 14px 20px rgba(0, 0, 0, 0.65);
+}
+
+/* 書背上的直排中文書名 */
+.book-spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;       
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 600;
+  font-size: 0.78rem;           
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  max-height: 130px;            
+  white-space: nowrap;          
+  overflow: hidden;
+  text-overflow: ellipsis;      
+}
+
+/* 書背頂部與底部的裝飾燙金細線 */
+.book-spine::before,
+.book-spine::after {
+  content: '';
+  width: 75%;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 1px;
+}
+
+/* ================= 2. 音量滑桿 (Range Input) 美化 ================= */
+input[type="range"].volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: #332E2A;
+  border-radius: 999px;
+  outline: none;
+}
+
+input[type="range"].volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #D4A373;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type="range"].volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* ================= 3. 自訂卷軸與彈窗動畫 ================= */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #332E2A;
+  border-radius: 999px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
