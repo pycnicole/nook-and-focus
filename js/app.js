@@ -38,13 +38,23 @@ var STORAGE_KEYS = {
   TODOS: 'nook_todos_empty_v1',
   BOOKS: 'nook_books_empty_v1',
   FOCUS_MINUTES: 'nook_focus_empty_v1',
+  FOCUS_DATE: 'nook_focus_date_v1', // 記錄今日專注分鐘數所屬的日期，用於每日歸零
   DOOR_CLOSED: 'nook_door_closed_v2' // 更新鑰匙名稱，確保預設關門立即生效
 };
+
+// 取得本地日期字串，例如 2026-10-19
+function getTodayKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 
 var state = {
   todos: loadFromStorage(STORAGE_KEYS.TODOS, typeof DEFAULT_TODOS !== 'undefined' ? DEFAULT_TODOS : []),
   books: loadFromStorage(STORAGE_KEYS.BOOKS, typeof DEFAULT_BOOKS !== 'undefined' ? DEFAULT_BOOKS : []),
   focusMinutes: parseInt(localStorage.getItem(STORAGE_KEYS.FOCUS_MINUTES), 10) || 0,
+  focusDate: localStorage.getItem(STORAGE_KEYS.FOCUS_DATE) || getTodayKey(),
   // 預設為 true（關門狀態）；只有當 localStorage 明確記錄為 'false' 時才打開
   isDoorClosed: localStorage.getItem(STORAGE_KEYS.DOOR_CLOSED) !== 'false',
   sounds: typeof DEFAULT_SOUNDS !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_SOUNDS)) : [],
@@ -65,9 +75,21 @@ function saveState() {
     localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify(state.todos));
     localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(state.books));
     localStorage.setItem(STORAGE_KEYS.FOCUS_MINUTES, String(state.focusMinutes));
+    localStorage.setItem(STORAGE_KEYS.FOCUS_DATE, state.focusDate);
     localStorage.setItem(STORAGE_KEYS.DOOR_CLOSED, String(state.isDoorClosed));
   } catch (e) {}
 }
+
+// 若跨日則將今日專注分鐘數歸零
+function checkFocusDateReset() {
+  var today = getTodayKey();
+  if (state.focusDate !== today) {
+    state.focusDate = today;
+    state.focusMinutes = 0;
+    saveState();
+  }
+}
+checkFocusDateReset();
 
 function refreshIcons() {
   if (typeof window.lucide !== 'undefined' && typeof window.lucide.createIcons === 'function') {
@@ -185,6 +207,7 @@ function toggleTimer() {
 
         var currentCfg = getCurrentModeConfig();
         if (state.timer.mode === 'focus') {
+          checkFocusDateReset(); // 網頁開著跨過午夜時，先歸零再累計
           var addedMins = Math.round(state.timer.totalSeconds / 60);
           state.focusMinutes += addedMins;
           saveState();
